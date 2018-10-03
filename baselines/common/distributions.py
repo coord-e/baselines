@@ -90,8 +90,16 @@ class DiagGaussianPdType(PdType):
     def pdclass(self):
         return DiagGaussianPd
 
-    def pdfromlatent(self, latent_vector, init_scale=1.0, init_bias=0.0):
-        mean = fc(latent_vector, 'pi', self.size, init_scale=init_scale, init_bias=init_bias)
+    def pdfromlatent(self, latent_vector, state_vector, with_linear=False, init_scale=1.0, init_bias=0.0):
+        if with_linear:
+            # Linear Control
+            K = tf.get_variable('linmatrix', [state_vector.get_shape()[1].value, self.size], initializer=tf.constant_initializer(0.0))
+            U_l = tf.matmul(state_vector, K)
+
+            U_n = fc(latent_vector, 'pi', self.size, init_scale=init_scale, init_bias=init_bias)
+            mean = tf.add(U_l, U_n, name='polfinal')
+        else:
+            mean = fc(latent_vector, 'pi', self.size, init_scale=init_scale, init_bias=init_bias)
         logstd = tf.get_variable(name='pi/logstd', shape=[1, self.size], initializer=tf.zeros_initializer())
         pdparam = tf.concat([mean, mean * 0.0 + logstd], axis=1)
         return self.pdfromflat(pdparam), mean
