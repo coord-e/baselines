@@ -70,6 +70,9 @@ def train(args, extra_args):
         if alg_kwargs.get('network') is None:
             alg_kwargs['network'] = get_default_network(env_type)
 
+    if args.observe_circular_ts:
+        alg_kwargs['observe_circular_ts'] = True
+
     print('Training {} on {}:{} with arguments \n{}'.format(args.alg, env_type, env_id, alg_kwargs))
 
     model = learn(
@@ -125,7 +128,7 @@ def build_env(args):
                                    intra_op_parallelism_threads=1,
                                    inter_op_parallelism_threads=1))
 
-       env = make_vec_env(env_id, env_type, args.num_env or 1, seed, reward_scale=args.reward_scale)
+       env = make_vec_env(env_id, env_type, args.num_env or 1, seed, reward_scale=args.reward_scale, observe_circular_ts=args.observe_circular_ts)
 
        if env_type == 'mujoco':
            env = VecNormalize(env)
