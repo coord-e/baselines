@@ -70,7 +70,7 @@ def train(args, extra_args):
         if alg_kwargs.get('network') is None:
             alg_kwargs['network'] = get_default_network(env_type)
 
-    if args.observe_circular_ts:
+    if args.observe_circular_ts != 0:
         alg_kwargs['observe_circular_ts'] = True
 
     print('Training {} on {}:{} with arguments \n{}'.format(args.alg, env_type, env_id, alg_kwargs))

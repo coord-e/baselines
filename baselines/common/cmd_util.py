@@ -20,7 +20,7 @@ from baselines.common.retro_wrappers import RewardScaler
 
 from env import CircularTimestepObserver
 
-def make_vec_env(env_id, env_type, num_env, seed, wrapper_kwargs=None, start_index=0, reward_scale=1.0, observe_circular_ts=False):
+def make_vec_env(env_id, env_type, num_env, seed, wrapper_kwargs=None, start_index=0, reward_scale=1.0, observe_circular_ts=0):
     """
     Create a wrapped, monitored SubprocVecEnv for Atari and MuJoCo.
     """
@@ -33,8 +33,8 @@ def make_vec_env(env_id, env_type, num_env, seed, wrapper_kwargs=None, start_ind
             env = Monitor(env,
                           logger.get_dir() and os.path.join(logger.get_dir(), str(mpi_rank) + '.' + str(rank)),
                           allow_early_resets=True)
-            if observe_circular_ts:
-                env = CircularTimestepObserver(env)
+            if observe_circular_ts != 0:
+                env = CircularTimestepObserver(env, t_cycle=observe_circular_ts)
 
             if env_type == 'atari': return wrap_deepmind(env, **wrapper_kwargs)
             elif reward_scale != 1: return RewardScaler(env, reward_scale)
@@ -106,7 +106,7 @@ def common_arg_parser():
     parser.add_argument('--reward_scale', help='Reward scale factor. Default: 1.0', default=1.0, type=float)
     parser.add_argument('--save_path', help='Path to save trained model to', default=None, type=str)
     parser.add_argument('--play', default=False, action='store_true')
-    parser.add_argument('--observe_circular_ts', default=False, action='store_true')
+    parser.add_argument('--observe_circular_ts', type=int, default=0)
     return parser
 
 def robotics_arg_parser():
