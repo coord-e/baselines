@@ -90,8 +90,23 @@ class DiagGaussianPdType(PdType):
     def pdclass(self):
         return DiagGaussianPd
 
-    def pdfromlatent(self, latent_vector, state_vector, with_linear=False, init_scale=1.0, init_bias=0.0):
-        mean = fc(latent_vector, 'pi', self.size, init_scale=init_scale, init_bias=init_bias)
+    def pdfromlatent(self, latent_vector, state_vector, with_linear=False, with_cpg=False, observe_circular_ts=False, init_scale=1.0, init_bias=0.0):
+        if without_network:
+            mean = np.zeros(self.size, dtype=np.float32)
+        else:
+            mean = fc(latent_vector, 'pi', self.size, init_scale=init_scale, init_bias=init_bias)
+
+        # Nonlinear Control - CPG
+        if with_cpg:
+            assert observe_circular_ts
+            t = state_vector[0][-1]
+            for i in range(16):
+                amp   = tf.get_variable('cpg_amp{}'.format(i),   [self.size], initializer=tf.constant_initializer(0.0))
+                freq  = tf.get_variable('cpg_freq{}'.format(i),  [self.size], initializer=tf.constant_initializer(0.0))
+                phase = tf.get_variable('cpg_phase{}'.format(i), [self.size], initializer=tf.constant_initializer(0.0))
+
+                out = tf.multiply(amp, tf.sin(freq * t + phase))
+                mean = tf.add(mean, out)
 
         if with_linear:
             # Linear Control
