@@ -15,7 +15,7 @@ class PolicyWithValue(object):
     Encapsulates fields and methods for RL policy and value function estimation with shared parameters
     """
 
-    def __init__(self, env, observations, latent, estimate_q=False, vf_latent=None, sess=None, with_linear=False, **tensors):
+    def __init__(self, env, observations, latent, estimate_q=False, vf_latent=None, sess=None, with_linear=False, with_cpg=False, observe_circular_ts=False, without_network=False, **tensors):
         """
         Parameters:
         ----------
@@ -46,7 +46,7 @@ class PolicyWithValue(object):
         # Based on the action space, will select what probability distribution type
         self.pdtype = make_pdtype(env.action_space)
 
-        self.pd, self.pi = self.pdtype.pdfromlatent(latent, observations, with_linear, init_scale=0.01)
+        self.pd, self.pi = self.pdtype.pdfromlatent(latent, observations, with_linear, with_cpg, observe_circular_ts, without_network, init_scale=0.01)
 
         # Take an action
         self.action = self.pd.sample()
@@ -118,7 +118,7 @@ class PolicyWithValue(object):
     def load(self, load_path):
         tf_util.load_state(load_path, sess=self.sess)
 
-def build_policy(env, policy_network, value_network=None,  normalize_observations=False, estimate_q=False, with_linear=False, **policy_kwargs):
+def build_policy(env, policy_network, value_network=None, normalize_observations=False, estimate_q=False, with_linear=False, with_cpg=False, observe_circular_ts=False, without_network=False, **policy_kwargs):
     if isinstance(policy_network, str):
         network_type = policy_network
         policy_network = get_network_builder(network_type)(**policy_kwargs)
@@ -170,6 +170,9 @@ def build_policy(env, policy_network, value_network=None,  normalize_observation
             sess=sess,
             estimate_q=estimate_q,
             with_linear=with_linear,
+            with_cpg=with_cpg,
+            observe_circular_ts=observe_circular_ts,
+            without_network=without_network,
             **extra_tensors
         )
         return policy

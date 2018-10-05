@@ -90,7 +90,7 @@ class DiagGaussianPdType(PdType):
     def pdclass(self):
         return DiagGaussianPd
 
-    def pdfromlatent(self, latent_vector, state_vector, with_linear=False, with_cpg=False, observe_circular_ts=False, init_scale=1.0, init_bias=0.0):
+    def pdfromlatent(self, latent_vector, state_vector, with_linear=False, with_cpg=False, observe_circular_ts=False, without_network=False, init_scale=1.0, init_bias=0.0):
         if without_network:
             mean = np.zeros(self.size, dtype=np.float32)
         else:
